@@ -1,8 +1,7 @@
 package config
 
 import (
-	"log"
-	"os"
+	"log/slog"
 	"sync"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -19,22 +18,15 @@ type Config struct {
 	Repository ordersrepository.Config `yaml:"repository"`
 }
 
-var instance *Config
-var once sync.Once
-
-func GetConfig() *Config {
-	once.Do(func() {
-		infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-		errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-
-		infoLog.Println("read application configuration")
-		instance = &Config{}
+func GetConfig(lg *slog.Logger) (*Config, error) {
+	return sync.OnceValues(func() (*Config, error) {
+		instance := &Config{}
 		if err := cleanenv.ReadConfig("config.yml", instance); err != nil {
 			help, _ := cleanenv.GetDescription(instance, nil)
-			infoLog.Println(help)
-			errorLog.Fatal(err)
+			lg.Info(help)
+			lg.Error("failed to read config", "err", err)
+			return nil, err
 		}
-	})
-
-	return instance
+		return instance, nil
+	})()
 }

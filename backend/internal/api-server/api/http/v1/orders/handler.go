@@ -3,7 +3,7 @@ package orders
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -19,10 +19,10 @@ const (
 
 type handler struct {
 	service *orderservice.Service
-	lg      *log.Logger
+	lg      *slog.Logger
 }
 
-func NewHandler(lg *log.Logger, service *orderservice.Service) handlers.Handler {
+func NewHandler(lg *slog.Logger, service *orderservice.Service) handlers.Handler {
 	return &handler{
 		service: service,
 		lg:      lg,
@@ -37,13 +37,16 @@ func (h *handler) GetOrderByUUID(w http.ResponseWriter, r *http.Request) error {
 	params := httprouter.ParamsFromContext(r.Context())
 	id := params.ByName("uuid")
 
+	h.lg.Info("called h.service.GetByUUID: get order by uid")
 	res, err := h.service.GetByUUID(context.Background(), id)
 	if err != nil {
+		h.lg.Error("failed to get order by uid", "err", err)
 		return err
 	}
 
 	resBytes, err := json.Marshal(&res)
 	if err != nil {
+		h.lg.Error("failed to marshal order", "err", err)
 		return err
 	}
 

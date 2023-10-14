@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"strings"
 
 	"github.com/taaanechka/order-service/internal/api-server/services/ports/ordersrepository"
@@ -15,10 +15,10 @@ import (
 
 type DB struct {
 	client postgresql.Client
-	lg     *log.Logger
+	lg     *slog.Logger
 }
 
-func NewRepository(lg *log.Logger, cfg ordersrepository.Config) (*DB, error) {
+func NewRepository(lg *slog.Logger, cfg ordersrepository.Config) (*DB, error) {
 	ctx := context.Background()
 	db, err := postgresql.NewClient(ctx, cfg)
 	if err != nil {
@@ -39,7 +39,7 @@ func (db *DB) FindOne(ctx context.Context, id string) (ordersrepository.Order, e
 	q := `
 		SELECT data FROM orders WHERE data->>'order_uid' = $1
 	`
-	db.lg.Printf(fmt.Sprintf("SQL Query: %s", formatQuery(q)))
+	db.lg.Info("FindOne.", "query", formatQuery(q))
 
 	var jsonData []byte
 	err := db.client.QueryRowContext(ctx, q, id).Scan(&jsonData)
@@ -47,13 +47,14 @@ func (db *DB) FindOne(ctx context.Context, id string) (ordersrepository.Order, e
 		if err == sql.ErrNoRows {
 			return ordersrepository.Order{}, apperror.ErrNotFound
 		}
+		db.lg.Error("Invalid sql query", "err", err)
 		return ordersrepository.Order{}, err
 	}
 
 	var order ordersrepository.Order
 	err = json.Unmarshal(jsonData, &order)
 	if err != nil {
-		db.lg.Println(err)
+		db.lg.Error("Invalid data format", "err", err)
 		return ordersrepository.Order{}, apperror.ErrValidate
 	}
 

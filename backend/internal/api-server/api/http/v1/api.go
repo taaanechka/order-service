@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"log"
+	"log/slog"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/taaanechka/order-service/internal/api-server/api/http/v1/orders"
@@ -10,11 +10,11 @@ import (
 )
 
 type API struct {
-	lg      *log.Logger
+	lg      *slog.Logger
 	service *orderservice.Service
 }
 
-func NewHandler(lg *log.Logger, service *orderservice.Service) handlers.Handler {
+func NewHandler(lg *slog.Logger, service *orderservice.Service) handlers.Handler {
 	return &API{
 		service: service,
 		lg:      lg,
@@ -22,6 +22,6 @@ func NewHandler(lg *log.Logger, service *orderservice.Service) handlers.Handler 
 }
 
 func (a *API) Register(router *httprouter.Router) {
-	users := orders.NewHandler(a.lg, a.service)
-	users.Register(router)
+	ordersHandler := orders.NewHandler(a.lg, a.service)
+	ordersHandler.Register(router)
 }
