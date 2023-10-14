@@ -62,11 +62,11 @@ func start(lg *slog.Logger, router *httprouter.Router, cfg *config.Config) {
 
 		lg.Info("listen unix socket")
 		listener, listenErr = net.Listen("unix", socketPath)
-		lg.Info("server is listening unix socket.", "socket_path", socketPath)
+		lg.Info("server is listening unix socket", "socket_path", socketPath)
 	} else {
 		lg.Info("listen tcp")
 		listener, listenErr = net.Listen("tcp", fmt.Sprintf("%s:%s", cfg.Listen.BindIP, cfg.Listen.Port))
-		lg.Info("server is listening port.", "bind_ip", cfg.Listen.BindIP, "port", cfg.Listen.Port)
+		lg.Info("server is listening port", "bind_ip", cfg.Listen.BindIP, "port", cfg.Listen.Port)
 	}
 
 	if listenErr != nil {

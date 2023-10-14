@@ -30,7 +30,7 @@ func NewHandler(lg *slog.Logger, service *orderservice.Service) handlers.Handler
 }
 
 func (h *handler) Register(router *httprouter.Router) {
-	router.HandlerFunc(http.MethodGet, orderURL, apperror.Middleware(h.GetOrderByUUID))
+	router.HandlerFunc(http.MethodGet, orderURL, apperror.Middleware(h.lg, h.GetOrderByUUID))
 }
 
 func (h *handler) GetOrderByUUID(w http.ResponseWriter, r *http.Request) error {
@@ -51,7 +51,10 @@ func (h *handler) GetOrderByUUID(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(resBytes)
+	if _, errWr := w.Write(resBytes); errWr != nil {
+		h.lg.Error("failed to write res data in response", "err", errWr)
+		return errWr
+	}
 
 	return nil
 }

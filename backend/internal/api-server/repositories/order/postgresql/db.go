@@ -39,7 +39,7 @@ func (db *DB) FindOne(ctx context.Context, id string) (ordersrepository.Order, e
 	q := `
 		SELECT data FROM orders WHERE data->>'order_uid' = $1
 	`
-	db.lg.Info("FindOne.", "query", formatQuery(q))
+	db.lg.Info("FindOne", "query", formatQuery(q))
 
 	var jsonData []byte
 	err := db.client.QueryRowContext(ctx, q, id).Scan(&jsonData)
