@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	v1 "github.com/taaanechka/order-service/internal/api-server/api/http/v1"
+	"github.com/taaanechka/order-service/internal/api-server/repositories/order/cache"
 	"github.com/taaanechka/order-service/internal/api-server/repositories/order/postgresql"
 	"github.com/taaanechka/order-service/internal/api-server/services/orderservice"
 	"github.com/taaanechka/order-service/internal/api-server/services/ports/ordersrepository"
@@ -27,18 +29,24 @@ func main() {
 	cfg, err := config.GetConfig(lg)
 	if err != nil {
 		return
-	} 
+	}
 
-	rep, err := postgresql.NewRepository(lg, ordersrepository.Config(cfg.Repository))
+	ordersRep, err := postgresql.NewRepository(lg, ordersrepository.Config(cfg.Repository))
 	if err != nil {
-		lg.Error("failed to init storage", "err", err)
+		lg.Error("failed to create repository", "err", err)
 		return
 	}
 
-	service := orderservice.NewService(lg, rep)
+	cacheRep, err := cache.NewRepository(lg)
+	if err != nil {
+		lg.Error("failed to create cache", "err", err)
+		return
+	}
 
-	lg.Info("register order handler")
-	handler := v1.NewHandler(lg, service)
+	orderService := orderservice.NewService(lg, ordersRep, cacheRep)
+	orderService.Init(context.Background())
+
+	handler := v1.NewHandler(lg, orderService)
 	handler.Register(router)
 
 	start(lg, router, cfg)
@@ -54,7 +62,7 @@ func start(lg *slog.Logger, router *httprouter.Router, cfg *config.Config) {
 		lg.Info("detect app path")
 		appDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
-			lg.Error("Cant detect app path", "err", err)
+			lg.Error("failed to detect app path", "err", err)
 			return
 		}
 		lg.Info("create socket")

@@ -11,7 +11,6 @@ type appHandler func(w http.ResponseWriter, r *http.Request) error
 func Middleware(lg *slog.Logger, h appHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-
 		err := h(w, r)
 		if err == nil {
 			return
@@ -23,7 +22,6 @@ func Middleware(lg *slog.Logger, h appHandler) http.HandlerFunc {
 			if _, errWr := w.Write(systemError(err).Marshal()); errWr != nil {
 				lg.Error("failed to write appErr data in response", "err", errWr)
 			}
-
 			return
 		}
 
