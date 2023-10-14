@@ -11,6 +11,7 @@ type Config struct {
 }
 
 type Repository interface {
-	// Create(ctx context.Context, order Order) (string, error)
+	Create(ctx context.Context, order Order) (string, error)
+	FindAll(ctx context.Context) ([]Order, error)
 	FindOne(ctx context.Context, id string) (Order, error)
 }

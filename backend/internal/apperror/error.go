@@ -8,6 +8,7 @@ var (
 	ErrBadID    = NewAppError(nil, "bad order id", "")
 	ErrNotFound = NewAppError(nil, "not found", "")
 	ErrValidate = NewAppError(nil, "invalid data", "")
+	ErrCreate   = NewAppError(nil, "failed to create", "")
 )
 
 type AppError struct {

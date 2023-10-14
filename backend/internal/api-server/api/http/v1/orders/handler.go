@@ -23,36 +23,61 @@ type handler struct {
 }
 
 func NewHandler(lg *slog.Logger, service *orderservice.Service) handlers.Handler {
+	lg.Info("Handler: new order handler")
 	return &handler{
 		service: service,
 		lg:      lg,
 	}
 }
 
+
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func NewLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
+	return &loggingResponseWriter{w, http.StatusOK}
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
+}
+
+func LogMiddleware(lg *slog.Logger, h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		lrw := NewLoggingResponseWriter(w)
+		h(lrw, r)
+		lg.Info("LogMiddleware", "Method", r.Method, "URL", r.URL, "Status", lrw.statusCode, "Addr", r.RemoteAddr)
+	}
+}
+
+
 func (h *handler) Register(router *httprouter.Router) {
-	router.HandlerFunc(http.MethodGet, orderURL, apperror.Middleware(h.lg, h.GetOrderByUUID))
+	h.lg.Info("Handler: register order handler")
+	router.HandlerFunc(http.MethodGet, orderURL, LogMiddleware(h.lg, apperror.Middleware(h.lg, h.GetOrderByUUID)))
 }
 
 func (h *handler) GetOrderByUUID(w http.ResponseWriter, r *http.Request) error {
 	params := httprouter.ParamsFromContext(r.Context())
 	id := params.ByName("uuid")
 
-	h.lg.Info("called h.service.GetByUUID: get order by uid")
 	res, err := h.service.GetByUUID(context.Background(), id)
 	if err != nil {
-		h.lg.Error("failed to get order by uid", "err", err)
+		h.lg.Error("Handler: failed to get order by uid", "err", err)
 		return err
 	}
 
 	resBytes, err := json.Marshal(&res)
 	if err != nil {
-		h.lg.Error("failed to marshal order", "err", err)
+		h.lg.Error("Handler: failed to marshal order", "err", err)
 		return err
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, errWr := w.Write(resBytes); errWr != nil {
-		h.lg.Error("failed to write res data in response", "err", errWr)
+		h.lg.Error("Handler: failed to write res data in response", "err", errWr)
 		return errWr
 	}
 
