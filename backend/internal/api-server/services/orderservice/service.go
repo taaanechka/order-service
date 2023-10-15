@@ -38,21 +38,36 @@ func (s *Service) Init(ctx context.Context) {
 	}
 }
 
-func (s *Service) GetByUUID(ctx context.Context, id string) (ordersrepository.Order, error) {
-	o, err := s.cache.FindOne(ctx, id)
-	if err == nil {
-		return o, nil
+func (s *Service) Create(ctx context.Context, order ordersrepository.Order) (string, error) {
+	uid, err := s.rep.Create(ctx, order)
+	if err != nil {
+		s.lg.Error("Service: failed to create order", "err", err)
+		return "", nil
 	}
 
-	o, err = s.rep.FindOne(ctx, id)
+	go func() {
+		if _, err := s.cache.CreateOne(ctx, order); err != nil {
+			s.lg.Warn("Service: failed to write order to cache", "err", err)
+		}
+	}()
+	return uid, nil
+}
+
+func (s *Service) GetByUUID(ctx context.Context, id string) (ordersrepository.Order, error) {
+	order, err := s.cache.FindOne(ctx, id)
+	if err == nil {
+		return order, nil
+	}
+
+	order, err = s.rep.FindOne(ctx, id)
 	if err != nil {
 		return ordersrepository.Order{}, fmt.Errorf("Service: failed to get order: %w", err)
 	}
 
 	go func() {
-		if _, err := s.cache.CreateOne(ctx, o); err != nil {
+		if _, err := s.cache.CreateOne(ctx, order); err != nil {
 			s.lg.Warn("Service: failed to write order to cache", "err", err)
 		}
 	}()
-	return o, nil
+	return order, nil
 }
