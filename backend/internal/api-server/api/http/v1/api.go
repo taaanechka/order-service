@@ -6,7 +6,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/taaanechka/order-service/internal/api-server/api/http/v1/orders"
 	"github.com/taaanechka/order-service/internal/api-server/services/orderservice"
-	"github.com/taaanechka/order-service/internal/handlers"
 )
 
 type API struct {
@@ -14,7 +13,7 @@ type API struct {
 	service *orderservice.Service
 }
 
-func NewHandler(lg *slog.Logger, service *orderservice.Service) handlers.Handler {
+func NewHandler(lg *slog.Logger, service *orderservice.Service) *API {
 	return &API{
 		service: service,
 		lg:      lg,

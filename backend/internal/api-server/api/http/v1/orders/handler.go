@@ -1,7 +1,6 @@
 package orders
 
 import (
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -9,7 +8,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/taaanechka/order-service/internal/api-server/services/orderservice"
 	"github.com/taaanechka/order-service/internal/apperror"
-	"github.com/taaanechka/order-service/internal/handlers"
 )
 
 const (
@@ -17,19 +15,18 @@ const (
 	orderURL  = "/orders/:uuid"
 )
 
-type handler struct {
+type Handler struct {
 	service *orderservice.Service
 	lg      *slog.Logger
 }
 
-func NewHandler(lg *slog.Logger, service *orderservice.Service) handlers.Handler {
-	lg.Info("Handler: new order handler")
-	return &handler{
+func NewHandler(lg *slog.Logger, service *orderservice.Service) *Handler {
+	lg.Info("httpHandler: new order handler")
+	return &Handler{
 		service: service,
 		lg:      lg,
 	}
 }
-
 
 type loggingResponseWriter struct {
 	http.ResponseWriter
@@ -53,31 +50,31 @@ func LogMiddleware(lg *slog.Logger, h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-
-func (h *handler) Register(router *httprouter.Router) {
-	h.lg.Info("Handler: register order handler")
+func (h *Handler) Register(router *httprouter.Router) {
+	h.lg.Info("httpHandler: register order handler")
 	router.HandlerFunc(http.MethodGet, orderURL, LogMiddleware(h.lg, apperror.Middleware(h.lg, h.GetOrderByUUID)))
 }
 
-func (h *handler) GetOrderByUUID(w http.ResponseWriter, r *http.Request) error {
-	params := httprouter.ParamsFromContext(r.Context())
+func (h *Handler) GetOrderByUUID(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	params := httprouter.ParamsFromContext(ctx)
 	id := params.ByName("uuid")
 
-	res, err := h.service.GetByUUID(context.Background(), id)
+	res, err := h.service.GetByUUID(ctx, id)
 	if err != nil {
-		h.lg.Error("Handler: failed to get order by uid", "err", err)
+		h.lg.Error("httpHandler: failed to get order by uid", "err", err)
 		return err
 	}
 
 	resBytes, err := json.Marshal(&res)
 	if err != nil {
-		h.lg.Error("Handler: failed to marshal order", "err", err)
+		h.lg.Error("httpHandler: failed to marshal order", "err", err)
 		return err
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, errWr := w.Write(resBytes); errWr != nil {
-		h.lg.Error("Handler: failed to write res data in response", "err", errWr)
+		h.lg.Error("httpHandler: failed to write res data in response", "err", errWr)
 		return errWr
 	}
 
