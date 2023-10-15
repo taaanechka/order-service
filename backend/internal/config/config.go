@@ -16,6 +16,13 @@ type Config struct {
 		Port   string `yaml:"port" env-default:"8080"`
 	} `yaml:"listen"`
 	Repository ordersrepository.Config `yaml:"repository"`
+	Nats       NatsConfig              `yaml:"nats"`
+}
+
+type NatsConfig struct {
+	ClusterID   string `yaml:"cluster_id"`
+	ClientIDSub string `yaml:"client_id_sub"`
+	ClientIDPub string `yaml:"client_id_pub"`
 }
 
 func GetConfig(lg *slog.Logger) (*Config, error) {

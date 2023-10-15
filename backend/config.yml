@@ -9,3 +9,7 @@ repository:
   database: order-test
   username: user
   password: password
+nats:
+  cluster_id: test-cluster
+  client_id_sub: test-client-1
+  client_id_pub: test-client-2
