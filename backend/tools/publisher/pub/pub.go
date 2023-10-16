@@ -5,7 +5,6 @@ import (
 	"log/slog"
 
 	"github.com/nats-io/stan.go"
-	"github.com/taaanechka/order-service/internal/config"
 	"github.com/taaanechka/order-service/pkg/client/nats"
 )
 
@@ -14,7 +13,7 @@ type Publisher struct {
 	lg    *slog.Logger
 }
 
-func NewPublisher(lg *slog.Logger, cfg config.NatsConfig) (*Publisher, error) {
+func NewPublisher(lg *slog.Logger, cfg nats.Config) (*Publisher, error) {
 	lg.Info("Pub: new publisher")
 	sconn, err := nats.NewClient(cfg, true)
 	if err != nil {

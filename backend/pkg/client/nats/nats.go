@@ -4,10 +4,15 @@ import (
 	"fmt"
 
 	"github.com/nats-io/stan.go"
-	"github.com/taaanechka/order-service/internal/config"
 )
 
-func NewClient(cfg config.NatsConfig, isPub bool) (stan.Conn, error) {
+type Config struct {
+	ClusterID   string `yaml:"cluster_id"`
+	ClientIDSub string `yaml:"client_id_sub"`
+	ClientIDPub string `yaml:"client_id_pub"`
+}
+
+func NewClient(cfg Config, isPub bool) (stan.Conn, error) {
 	var clientID string
 	if isPub {
 		clientID = cfg.ClientIDPub
