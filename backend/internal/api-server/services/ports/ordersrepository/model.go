@@ -1,55 +1,55 @@
 package ordersrepository
 
 type Order struct {
-	OrderUid          string        `json:"order_uid,omitempty"`
-	TrackNumber       string        `json:"track_number"`
-	Entry             string        `json:"entry"`
-	Delivery          OrderDelivery `json:"delivery"`
-	Payment           OrderPayment  `json:"payment"`
-	Items             []Item        `json:"items"`
-	Locale            string        `json:"locale"`
-	InternalSignature string        `json:"internal_signature,omitempty"`
-	CustomerId        string        `json:"customer_id"`
-	Meest             string        `json:"meest"`
-	Shardkey          string        `json:"shardkey"`
-	SmId              uint          `json:"sm_id"`
-	DateCreated       string        `json:"date_created"`
-	OofShard          string        `json:"oof_shard"`
+	OrderUid          string        `json:"order_uid" validate:"required"`
+	TrackNumber       string        `json:"track_number" validate:"required"`
+	Entry             string        `json:"entry" validate:"required"`
+	Delivery          OrderDelivery `json:"delivery" validate:"required,structonly"`
+	Payment           OrderPayment  `json:"payment" validate:"required,structonly"`
+	Items             []Item        `json:"items" validate:"required,structonly"`
+	Locale            string        `json:"locale" validate:"required"`
+	InternalSignature string        `json:"internal_signature,omitempty" validate:"omitempty"`
+	CustomerId        string        `json:"customer_id" validate:"required"`
+	Meest             string        `json:"meest" validate:"required"`
+	Shardkey          string        `json:"shardkey" validate:"required"`
+	SmId              uint          `json:"sm_id" validate:"required"`
+	DateCreated       string        `json:"date_created" validate:"required"`
+	OofShard          string        `json:"oof_shard" validate:"required"`
 }
 
 type OrderDelivery struct {
-	Name    string `json:"name"`
-	Phone   string `json:"phone"`
-	Zip     string `json:"zip"`
-	City    string `json:"city"`
-	Address string `json:"address"`
-	Region  string `json:"region"`
-	Email   string `json:"email"`
+	Name    string `json:"name" validate:"required"`
+	Phone   string `json:"phone" validate:"required"`
+	Zip     string `json:"zip" validate:"required"`
+	City    string `json:"city" validate:"required"`
+	Address string `json:"address" validate:"required"`
+	Region  string `json:"region" validate:"required"`
+	Email   string `json:"email" validate:"required"`
 }
 
 type OrderPayment struct {
-	Transaction  string `json:"transaction"`
-	RequestId    string `json:"request_id,omitempty"`
-	Currency     string `json:"currency"`
-	Provider     string `json:"provider"`
-	Amount       uint   `json:"amount"`
-	PaymentDt    uint   `json:"payment_dt"`
-	Bank         string `json:"bank"`
-	DeliveryCost uint   `json:"delivery_cost"`
-	GoodsTotal   uint   `json:"goods_total"`
-	CustomFee    uint   `json:"custom_fee"`
+	Transaction  string `json:"transaction" validate:"required"`
+	RequestId    string `json:"request_id,omitempty" validate:"omitempty"`
+	Currency     string `json:"currency" validate:"required"`
+	Provider     string `json:"provider" validate:"required"`
+	Amount       uint   `json:"amount" validate:"required"`
+	PaymentDt    uint   `json:"payment_dt" validate:"required"`
+	Bank         string `json:"bank" validate:"required"`
+	DeliveryCost uint   `json:"delivery_cost" validate:"required"`
+	GoodsTotal   uint   `json:"goods_total" validate:"required"`
+	CustomFee    uint   `json:"custom_fee" validate:"required"`
 }
 
 type Item struct {
-	ChrtId      uint   `json:"chrt_id"`
-	TrackNumber string `json:"track_number"`
-	Price       uint   `json:"price"`
-	Rid         string `json:"rid"`
-	Name        string `json:"name"`
-	Sale        uint   `json:"sale"`
-	Size        string `json:"size"`
-	TotalPrice  uint   `json:"total_price"`
-	NmId        uint   `json:"nm_id"`
-	Brand       string `json:"brand"`
-	Status      uint   `json:"status"`
+	ChrtId      uint   `json:"chrt_id" validate:"required"`
+	TrackNumber string `json:"track_number" validate:"required"`
+	Price       uint   `json:"price" validate:"required"`
+	Rid         string `json:"rid" validate:"required"`
+	Name        string `json:"name" validate:"required"`
+	Sale        uint   `json:"sale" validate:"required"`
+	Size        string `json:"size" validate:"required"`
+	TotalPrice  uint   `json:"total_price" validate:"required"`
+	NmId        uint   `json:"nm_id" validate:"required"`
+	Brand       string `json:"brand" validate:"required"`
+	Status      uint   `json:"status" validate:"required"`
 }

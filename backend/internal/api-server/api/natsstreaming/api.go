@@ -3,6 +3,7 @@ package natsstreaming
 import (
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/nats-io/stan.go"
 	"github.com/taaanechka/order-service/internal/api-server/api/natsstreaming/orders"
@@ -26,7 +27,8 @@ func NewHandler(lg *slog.Logger, service *orderservice.Service, sconn stan.Conn)
 func (a *API) Subscribe() error {
 	ordersHandler := orders.NewHandler(a.lg, a.service, a.sconn)
 
-	if err := ordersHandler.Subscribe(); err != nil {
+	opts := []stan.SubscriptionOption{stan.SetManualAckMode(), stan.AckWait(time.Second * 30)}
+	if err := ordersHandler.Subscribe(opts); err != nil {
 		return fmt.Errorf("NATS API: failed to subscribe: %w", err)
 	}
 	return nil

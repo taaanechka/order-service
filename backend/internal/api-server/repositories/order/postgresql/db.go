@@ -89,7 +89,7 @@ func (db *DB) FindAll(ctx context.Context) ([]ordersrepository.Order, error) {
 		var or ordersrepository.Order
 		if err = json.Unmarshal(jsonData, &or); err != nil {
 			db.lg.Error("invalid order data format", "err", err)
-			return nil, apperror.ErrValidate
+			return nil, err
 		}
 
 		orders = append(orders, or)
@@ -122,7 +122,7 @@ func (db *DB) FindOne(ctx context.Context, id string) (ordersrepository.Order, e
 	var order ordersrepository.Order
 	if err = json.Unmarshal(jsonData, &order); err != nil {
 		db.lg.Error("invalid order data format", "err", err)
-		return ordersrepository.Order{}, apperror.ErrValidate
+		return ordersrepository.Order{}, err
 	}
 
 	return order, nil

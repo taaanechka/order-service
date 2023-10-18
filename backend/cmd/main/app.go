@@ -11,6 +11,7 @@ import (
 
 	"log/slog"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
 	v1 "github.com/taaanechka/order-service/internal/api-server/api/http/v1"
 	"github.com/taaanechka/order-service/internal/api-server/api/natsstreaming"
@@ -45,7 +46,8 @@ func main() {
 		return
 	}
 
-	orderService := orderservice.NewService(lg, ordersRep, cacheRep)
+	validate := validator.New()
+	orderService := orderservice.NewService(lg, ordersRep, cacheRep, validate)
 	orderService.Init(context.Background())
 
 	sconn, err := nats.NewClient(cfg.Nats, false)
