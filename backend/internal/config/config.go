@@ -6,6 +6,7 @@ import (
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/taaanechka/order-service/internal/api-server/services/ports/ordersrepository"
+	"github.com/taaanechka/order-service/pkg/client/nats"
 )
 
 type Config struct {
@@ -16,6 +17,7 @@ type Config struct {
 		Port   string `yaml:"port" env-default:"8080"`
 	} `yaml:"listen"`
 	Repository ordersrepository.Config `yaml:"repository"`
+	Nats       nats.Config             `yaml:"nats"`
 }
 
 func GetConfig(lg *slog.Logger) (*Config, error) {

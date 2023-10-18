@@ -28,9 +28,21 @@ services:
     depends_on:
       - postgres
 
+  nats:
+    container_name: nats
+    image: nats-streaming:latest
+    ports:
+      - 4222:4222
+    networks:
+      - nats_net
+    restart: always
+
 networks:
   database:
     driver: bridge
 
   database_admin:
+    driver: bridge
+
+  nats_net:
     driver: bridge

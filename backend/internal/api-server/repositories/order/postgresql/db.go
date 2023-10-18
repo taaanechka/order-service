@@ -37,7 +37,28 @@ func formatQuery(q string) string {
 }
 
 func (db *DB) Create(ctx context.Context, order ordersrepository.Order) (string, error) {
-	return "", nil
+	byteData, err := json.Marshal(&order)
+	if err != nil {
+		db.lg.Error("failed to marshal order", "err", err)
+		return "", err
+	}
+
+	var uid string
+	q := `
+		INSERT INTO orders(data) 
+		VALUES ($1) 
+		RETURNING data->>'order_uid'
+	`
+	db.lg.Info("Postgres: Create", "query", formatQuery(q))
+
+	if err := db.client.QueryRowContext(ctx, q, string(byteData)).Scan(&uid); err != nil {
+		if err == sql.ErrNoRows {
+			return "", apperror.ErrCreate
+		}
+		db.lg.Error("invalid sql query", "err", err)
+		return "", err
+	}
+	return uid, nil
 }
 
 func (db *DB) FindAll(ctx context.Context) ([]ordersrepository.Order, error) {
@@ -55,6 +76,8 @@ func (db *DB) FindAll(ctx context.Context) ([]ordersrepository.Order, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	orders := make([]ordersrepository.Order, 0)
 	for rows.Next() {
 		var jsonData []byte
@@ -66,7 +89,7 @@ func (db *DB) FindAll(ctx context.Context) ([]ordersrepository.Order, error) {
 		var or ordersrepository.Order
 		if err = json.Unmarshal(jsonData, &or); err != nil {
 			db.lg.Error("invalid order data format", "err", err)
-			return nil, apperror.ErrValidate
+			return nil, err
 		}
 
 		orders = append(orders, or)
@@ -99,7 +122,7 @@ func (db *DB) FindOne(ctx context.Context, id string) (ordersrepository.Order, e
 	var order ordersrepository.Order
 	if err = json.Unmarshal(jsonData, &order); err != nil {
 		db.lg.Error("invalid order data format", "err", err)
-		return ordersrepository.Order{}, apperror.ErrValidate
+		return ordersrepository.Order{}, err
 	}
 
 	return order, nil

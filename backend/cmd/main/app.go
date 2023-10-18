@@ -11,13 +11,17 @@ import (
 
 	"log/slog"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
 	v1 "github.com/taaanechka/order-service/internal/api-server/api/http/v1"
+	"github.com/taaanechka/order-service/internal/api-server/api/natsstreaming"
 	"github.com/taaanechka/order-service/internal/api-server/repositories/order/cache"
 	"github.com/taaanechka/order-service/internal/api-server/repositories/order/postgresql"
 	"github.com/taaanechka/order-service/internal/api-server/services/orderservice"
 	"github.com/taaanechka/order-service/internal/api-server/services/ports/ordersrepository"
 	"github.com/taaanechka/order-service/internal/config"
+	"github.com/taaanechka/order-service/pkg/client/nats"
+	"github.com/xlab/closer"
 )
 
 func main() {
@@ -43,11 +47,26 @@ func main() {
 		return
 	}
 
-	orderService := orderservice.NewService(lg, ordersRep, cacheRep)
+	defer closer.Close()
+
+	validate := validator.New()
+	orderService := orderservice.NewService(lg, ordersRep, cacheRep, validate)
 	orderService.Init(context.Background())
 
-	handler := v1.NewHandler(lg, orderService)
-	handler.Register(router)
+	sconn, err := nats.NewClient(cfg.Nats, false)
+	if err != nil {
+		lg.Error("failed to connect to nats-streaming", "err", err)
+		return
+	}
+	natsHandler := natsstreaming.NewHandler(lg, orderService, sconn)
+	if err := natsHandler.Subscribe(); err != nil {
+		lg.Error("failed to subscribe", "err", err)
+		return
+	}
+	closer.Bind(natsHandler.Drain)
+
+	httpHandler := v1.NewHandler(lg, orderService)
+	httpHandler.Register(router)
 
 	start(lg, router, cfg)
 }
