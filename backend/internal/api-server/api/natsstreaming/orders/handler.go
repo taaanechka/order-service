@@ -52,10 +52,14 @@ func (h *Handler) Handle(msg *stan.Msg) {
 	if _, err := h.service.Create(ctx, order); err != nil {
 		h.lg.Error("natsHandler: failed to create order", "err", err)
 		if errors.Is(err, apperror.ErrValidate) {
-			msg.Ack()
+			if err := msg.Ack(); err != nil {
+				h.lg.Warn("natsHandler: failed to manually acknowledge a message", "err", err)
+			}
 		}
 		return
 	}
 
-	msg.Ack()
+	if err := msg.Ack(); err != nil {
+		h.lg.Warn("natsHandler: failed to manually acknowledge a message", "err", err)
+	}
 }
