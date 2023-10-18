@@ -21,6 +21,7 @@ import (
 	"github.com/taaanechka/order-service/internal/api-server/services/ports/ordersrepository"
 	"github.com/taaanechka/order-service/internal/config"
 	"github.com/taaanechka/order-service/pkg/client/nats"
+	"github.com/xlab/closer"
 )
 
 func main() {
@@ -46,6 +47,8 @@ func main() {
 		return
 	}
 
+	defer closer.Close()
+
 	validate := validator.New()
 	orderService := orderservice.NewService(lg, ordersRep, cacheRep, validate)
 	orderService.Init(context.Background())
@@ -60,6 +63,7 @@ func main() {
 		lg.Error("failed to subscribe", "err", err)
 		return
 	}
+	closer.Bind(natsHandler.Drain)
 
 	httpHandler := v1.NewHandler(lg, orderService)
 	httpHandler.Register(router)

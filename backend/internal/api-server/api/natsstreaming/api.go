@@ -12,24 +12,25 @@ import (
 
 type API struct {
 	lg      *slog.Logger
-	sconn   stan.Conn
-	service *orderservice.Service
+	handler *orders.Handler
 }
 
 func NewHandler(lg *slog.Logger, service *orderservice.Service, sconn stan.Conn) *API {
+	ordersHandler := orders.NewHandler(lg, service, sconn)
 	return &API{
-		service: service,
-		sconn:   sconn,
 		lg:      lg,
+		handler: ordersHandler,
 	}
 }
 
 func (a *API) Subscribe() error {
-	ordersHandler := orders.NewHandler(a.lg, a.service, a.sconn)
-
 	opts := []stan.SubscriptionOption{stan.SetManualAckMode(), stan.AckWait(time.Second * 30)}
-	if err := ordersHandler.Subscribe(opts); err != nil {
+	if err := a.handler.Subscribe(opts); err != nil {
 		return fmt.Errorf("NATS API: failed to subscribe: %w", err)
 	}
 	return nil
+}
+
+func (a *API) Drain() {
+	a.handler.Drain()
 }

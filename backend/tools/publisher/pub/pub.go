@@ -33,3 +33,10 @@ func (p *Publisher) Publish(byteData []byte) error {
 	}
 	return nil
 }
+
+func (p *Publisher) Drain() {
+	p.lg.Info("Pub: drain the connection")
+	if err := p.sconn.NatsConn().Drain(); err != nil {
+        p.lg.Error("Pub: failed to drain", "err", err)
+    }
+}

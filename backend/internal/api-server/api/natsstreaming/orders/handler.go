@@ -63,3 +63,10 @@ func (h *Handler) Handle(msg *stan.Msg) {
 		h.lg.Warn("natsHandler: failed to manually acknowledge a message", "err", err)
 	}
 }
+
+func (h *Handler) Drain() {
+	h.lg.Info("natsHandler: drain the connection")
+	if err := h.sconn.NatsConn().Drain(); err != nil {
+        h.lg.Error("natsHandler: failed to drain", "err", err)
+    }
+}
