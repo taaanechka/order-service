@@ -61,6 +61,18 @@ func (c *Cache) CreateOne(ctx context.Context, order ordersrepository.Order) (st
 	return order.OrderUid, nil
 }
 
+func (c *Cache) FindAllUUIDs(ctx context.Context) ([]string, error) {
+	c.RLock()
+
+	defer c.RUnlock()
+
+	uids := make([]string, 0)
+	for uid := range c.orders {
+		uids = append(uids, uid)
+	}
+	return uids, nil
+}
+
 func (c *Cache) FindOne(ctx context.Context, id string) (ordersrepository.Order, error) {
 	c.RLock()
 

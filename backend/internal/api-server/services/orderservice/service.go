@@ -69,6 +69,15 @@ func (s *Service) Create(ctx context.Context, order ordersrepository.Order) (str
 	return uid, nil
 }
 
+func (s *Service) GetAllUUIDs(ctx context.Context) ([]string, error) {
+	uids, err := s.cache.FindAllUUIDs(ctx)
+	if err != nil {
+		s.lg.Error("Service: failed to find orders in cache", "err", err)
+		return nil, apperror.ErrValidate
+	}
+	return uids, nil
+}
+
 func (s *Service) GetByUUID(ctx context.Context, id string) (ordersrepository.Order, error) {
 	order, err := s.cache.FindOne(ctx, id)
 	if err == nil {
@@ -81,11 +90,11 @@ func (s *Service) GetByUUID(ctx context.Context, id string) (ordersrepository.Or
 
 	order, err = s.rep.FindOne(ctx, id)
 	if err != nil {
-		if err := s.validate.Struct(order); err != nil {
-			s.lg.Error("Service: failed to validate order", "err", err)
-			return ordersrepository.Order{}, apperror.ErrValidate
-		}
 		return ordersrepository.Order{}, fmt.Errorf("Service: failed to get order: %w", err)
+	}
+	if err := s.validate.Struct(order); err != nil {
+		s.lg.Error("Service: failed to validate order", "err", err)
+		return ordersrepository.Order{}, apperror.ErrValidate
 	}
 
 	go func() {
