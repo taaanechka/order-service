@@ -10,7 +10,7 @@ type Order struct {
 	Locale            string        `json:"locale" validate:"required"`
 	InternalSignature string        `json:"internal_signature,omitempty" validate:"omitempty"`
 	CustomerId        string        `json:"customer_id" validate:"required"`
-	Meest             string        `json:"meest" validate:"required"`
+	DeliveryService   string        `json:"delivery_service" validate:"required"`
 	Shardkey          string        `json:"shardkey" validate:"required"`
 	SmId              uint          `json:"sm_id" validate:"required"`
 	DateCreated       string        `json:"date_created" validate:"required"`
