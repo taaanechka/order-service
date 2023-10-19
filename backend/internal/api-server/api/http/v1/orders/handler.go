@@ -2,6 +2,9 @@ package orders
 
 import (
 	"encoding/json"
+	"fmt"
+
+	"html/template"
 	"log/slog"
 	"net/http"
 
@@ -11,8 +14,8 @@ import (
 )
 
 const (
-	ordersURL = "/orders"
-	orderURL  = "/orders/:uuid"
+	apiOrdersURL = "/api/v1/orders"
+	apiOrderURL  = "/api/v1/orders/:uuid"
 )
 
 type Handler struct {
@@ -52,13 +55,51 @@ func LogMiddleware(lg *slog.Logger, h http.HandlerFunc) http.HandlerFunc {
 
 func (h *Handler) Register(router *httprouter.Router) {
 	h.lg.Info("httpHandler: register order handler")
-	router.HandlerFunc(http.MethodGet, orderURL, LogMiddleware(h.lg, apperror.Middleware(h.lg, h.GetOrderByUUID)))
+	// Backend
+	router.HandlerFunc(http.MethodGet, apiOrderURL, LogMiddleware(h.lg, apperror.Middleware(h.lg, h.GetOrderByUUID)))
+	router.HandlerFunc(http.MethodGet, apiOrdersURL, LogMiddleware(h.lg, apperror.Middleware(h.lg, h.GetAllUUIDs)))
+
+	// Frontend
+	router.ServeFiles("/static/*filepath", http.Dir("static"))
+	router.HandlerFunc(http.MethodGet, "/", LogMiddleware(h.lg, apperror.Middleware(h.lg, h.OrderPage)))
+}
+
+func (h *Handler) GetAllUUIDs(w http.ResponseWriter, r *http.Request) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	uids, err := h.service.GetAllUUIDs(r.Context())
+	if err != nil {
+		if len(uids) == 0 {
+			h.lg.Error("httpHandler: failed to find orders in cache", "err", err)
+			return apperror.ErrNotFound
+		}
+		h.lg.Error("httpHandler: failed to get orders uids", "err", err)
+		return err
+	}
+
+	resBytes, err := json.Marshal(&uids)
+	if err != nil {
+		h.lg.Error("httpHandler: failed to marshal orders uids", "err", err)
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, errWr := w.Write(resBytes); errWr != nil {
+		h.lg.Error("httpHandler: failed to write res data in response", "err", errWr)
+		return errWr
+	}
+
+	return nil
 }
 
 func (h *Handler) GetOrderByUUID(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	params := httprouter.ParamsFromContext(ctx)
 	id := params.ByName("uuid")
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	res, err := h.service.GetByUUID(ctx, id)
 	if err != nil {
@@ -78,5 +119,20 @@ func (h *Handler) GetOrderByUUID(w http.ResponseWriter, r *http.Request) error {
 		return errWr
 	}
 
+	return nil
+}
+
+func (h *Handler) OrderPage(w http.ResponseWriter, r *http.Request) error {
+	t, err := template.ParseFiles("./templates/order.html")
+	if err != nil {
+		h.lg.Error("httpHandler: failed to parse files for new template", "err", err)
+		fmt.Fprint(w, err.Error())
+		return err
+	}
+
+	if err := t.Execute(w, nil); err != nil {
+		fmt.Fprint(w, err.Error())
+		return err
+	}
 	return nil
 }

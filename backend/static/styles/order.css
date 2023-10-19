@@ -1,0 +1,40 @@
+* {
+    box-sizing: border-box;
+  }
+
+  .offsetbasic {
+    position:relative;
+    left: 15px; 
+  }
+  
+  form {
+    position: relative;
+    margin: 1em;
+  }
+  
+  input {
+    display: block;
+    width: 70%;
+    height: 3em;
+    line-height: 3em;
+    border-radius: 1.5em;
+    border: 1px solid;
+    padding: 0 1.5em;
+  }
+  
+  button {
+    position: absolute;
+    top: .4em;
+    right:  30.5%;
+    width: 7%;
+    height: 2.2em;
+    border-radius: 1.1em;
+    border: 1px solid;
+    color: white;
+    background: rgba(0, 0, 255, 0.5);
+  }
+
+  textarea {
+    width: 68.5%;
+    height: 770px;
+  }

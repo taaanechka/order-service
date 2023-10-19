@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order</title>
+    <link rel="stylesheet" href="/static/styles/order.css">
+    <script defer src="/static/scripts/consts.js"></script>
+    <script defer src="/static/scripts/order.js"></script>
+</head>
+<body>
+    <h1 class="offsetbasic">Данные о заказе</h1>
+
+    <form id="searchOrder">
+        <input type="text" name="orderuid" placeholder="Введите order_uid" id="order_uid">
+        <button type="submit" id="search-submit">Найти</button>
+    </form>
+
+    <textarea readonly id="res" class="offsetbasic" ></textarea>
+</body>
+</html>

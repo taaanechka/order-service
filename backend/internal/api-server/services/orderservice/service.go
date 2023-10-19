@@ -69,6 +69,15 @@ func (s *Service) Create(ctx context.Context, order ordersrepository.Order) (str
 	return uid, nil
 }
 
+func (s *Service) GetAllUUIDs(ctx context.Context) ([]string, error) {
+	uids, err := s.cache.FindAllUUIDs(ctx)
+	if err != nil {
+		s.lg.Error("Service: failed to find orders in cache", "err", err)
+		return nil, apperror.ErrValidate
+	}
+	return uids, nil
+}
+
 func (s *Service) GetByUUID(ctx context.Context, id string) (ordersrepository.Order, error) {
 	order, err := s.cache.FindOne(ctx, id)
 	if err == nil {
